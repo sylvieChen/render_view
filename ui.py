@@ -1,22 +1,13 @@
-import os
 import sys
 from PySide import QtGui, QtCore
-from main import generate_rib_file, render_to_disk, get_render_log_data, get_render_image_path
-
-
-DEFAULT_IMAGE_EXT = 'tiff'
-DEFAULT_IMAGE_FILE_NAME = 'default'
+from main import RenderViewer
 
 
 class RenderViewerUI(QtGui.QWidget):
     def __init__(self):
         super(RenderViewerUI, self).__init__()
         self.title = 'Render View'
-
-        self.render_color = [.5, .5, .5]
-        self.render_log = ''
-        self.output_path = os.getcwd()
-        self.image_file_name = '{0}.{1}'.format(DEFAULT_IMAGE_FILE_NAME, DEFAULT_IMAGE_EXT)
+        self.render_viewer = RenderViewer()
 
         self.setup_ui()
         self.setup_signal()
@@ -33,8 +24,8 @@ class RenderViewerUI(QtGui.QWidget):
         self.image_label.setPalette(palette)
 
         info_str = ''
-        info_str += 'Output Path: {}\n'.format(self.output_path)
-        info_str += 'File Name: {}\n'.format(self.image_file_name)
+        info_str += 'Output Directory: {}\n'.format(self.render_viewer.output_dir)
+        info_str += 'File Name: {}\n'.format(self.render_viewer.image_full_path)
         self.render_info_label = QtGui.QLabel()
         self.render_info_label.setText(info_str)
         self.render_info_label.setEnabled(False)
@@ -55,7 +46,7 @@ class RenderViewerUI(QtGui.QWidget):
 
         self.render_button = QtGui.QPushButton('Render')
         self.render_button.setToolTip('Render to disk.')
-        self.render_button.setStyleSheet("QPushButton { background-color: rgb(200, 200, 200)}")
+        self.render_button.setStyleSheet("QPushButton { background-color: rgb(125, 125, 125)}")
 
         self.render_hbox_layout = QtGui.QHBoxLayout()
 
@@ -84,29 +75,29 @@ class RenderViewerUI(QtGui.QWidget):
             r = float(rgb_color[0]) / 255.0
             g = float(rgb_color[1]) / 255.0
             b = float(rgb_color[2]) / 255.0
-            self.render_color = [r, g, b]
+            self.render_viewer.set_render_colr(color=[r, g, b])
             bg = "background-color: rgb({r}, {g}, {b})".format(r=rgb_color[0], g=rgb_color[1], b=rgb_color[2])
-            self.color_button.setStyleSheet( "QPushButton "+ "{" + bg +"}")
+            self.color_button.setStyleSheet("QPushButton " + "{" + bg + "}")
 
     def render(self):
         #   Generate rib file.
-        rib_file_path = os.path.join(self.output_path, self.image_file_name)
-        generate_rib_file(rib_file_path=rib_file_path, base_color=self.render_color)
+        self.render_viewer.generate_rib_file()
 
         #   Render to disk.
-        render_log_file = render_to_disk(rib_file_path=rib_file_path)
+        self.render_viewer.render_to_disk()
 
         #   Display render log to the UI.
-        self.render_log = get_render_log_data(render_log_path=render_log_file)
+        self.render_log = self.render_viewer.get_render_log_data()
         render_log = '\n'.join(self.render_log)
         self.render_log_textedit.setText(render_log)
 
         #   Display render image to the UI.
-        image_file_path = get_render_image_path(rib_file_path=rib_file_path)
+        image_file_path = self.render_viewer.image_full_path
         self.image_label.clear()
         pixmap = QtGui.QPixmap(image_file_path)
         scaled_pixmap = pixmap.scaled(512, 512)
         self.image_label.setPixmap(scaled_pixmap)
+
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
