@@ -25,7 +25,8 @@ class RenderViewerUI(QtGui.QWidget):
 
         info_str = ''
         info_str += 'Output Directory: {}\n'.format(self.render_viewer.output_dir)
-        info_str += 'File Name: {}\n'.format(self.render_viewer.image_full_path)
+        info_str += 'Image FileName: {}\n'.format(self.render_viewer.image_full_path)
+        info_str += 'Image Size: {0} x {1}\n'.format(self.render_viewer.image_wsize, self.render_viewer.image_hsize)
         self.render_info_label = QtGui.QLabel()
         self.render_info_label.setText(info_str)
         self.render_info_label.setEnabled(False)
